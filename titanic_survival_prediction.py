@@ -72,7 +72,7 @@ for dataset in full_data:
     dataset['Age'] = dataset['Age'].astype(int)
 
 # Function to extract titles from passenger names
-'''def get_title(name):
+def get_title(name):
     title_search = re.search(' ([A-Za-z]+)\.', name)
     # If the title exists, extract and return it.
     if title_search:
@@ -88,7 +88,7 @@ for dataset in full_data:
     dataset['Title'] = dataset['Title'].replace(['Lady', 'Countess','Capt', 'Col','Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'], 'Rare')
     dataset['Title'] = dataset['Title'].replace('Mlle', 'Miss')
     dataset['Title'] = dataset['Title'].replace('Ms', 'Miss')
-    dataset['Title'] = dataset['Title'].replace('Mme', 'Mrs')'''
+    dataset['Title'] = dataset['Title'].replace('Mme', 'Mrs')
 
 # Converts all the categorical features into integers
 for dataset in full_data:
@@ -126,11 +126,17 @@ drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'SibSp', 'Parch']
 train = train.drop(drop_elements, axis = 1)
 test  = test.drop(drop_elements, axis = 1)
 
+# Applying these two columns to string type so that we can one hot encode it.
+train['IsAlone'] = train['IsAlone'].apply(str)
+test['IsAlone'] = test['IsAlone'].apply(str)
+train['Has_Cabin'] = train['Has_Cabin'].apply(str)
+test['Has_Cabin'] = test['Has_Cabin'].apply(str)
+
 ########################## One Hot Encoding of Categorical features #################
 train_dummies=pd.get_dummies(train)
-print(train_dummies.head())
+print("Final columns in train dataset \n", train_dummies.columns)
 test_dummies=pd.get_dummies(test)
-print(test_dummies.head())
+print("Final columns in test dataset \n", test_dummies.columns)
 
 # Create Numpy arrays of train, test and target (Survived) dataframes to feed into our models'''
 x_train = train_dummies.drop(['Survived'], axis=1).values 
@@ -171,16 +177,13 @@ df = pd.DataFrame({"Max Depth": depth_range, "Average Accuracy": accuracies})
 df = df[["Max Depth", "Average Accuracy"]]
 print(df.to_string(index=False))'''
 
-decision_tree1 = tree.DecisionTreeClassifier(max_depth=3)
-decision_tree1.fit(x_train, y_train)
-
 ########################### RANDOMIZED SEARCH ###############################
-param_grid = {"max_depth": [1,2,3,4,5,6,7,8,9,10],
+'''param_grid = {"max_depth": [1,2,3,4,5,6,7,8,9,10],
               "min_samples_leaf": [6,7,8,9,10,11,12,13,14],
               "criterion":["gini", "entropy"]}
 decision_tree = tree.DecisionTreeClassifier()
 
-tree_cv = GridSearchCV(estimator = decision_tree,param_grid = param_grid, cv=10, n_jobs=-1)
+tree_cv = GridSearchCV(estimator = decision_tree,param_grid = param_grid, cv=3, n_jobs=-1)
 tree_cv.fit(x_train, y_train)
 
 print("tuned decision tree parameters: ",format(tree_cv.best_params_))
@@ -199,14 +202,35 @@ acc_decision_tree_train = round(tree_cv.score(x_train, y_train) * 100, 2)
 print("Accuracy on train dataset",acc_decision_tree_train)
 
 acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , submission['Survived'].values)*100, 2)
+print("Accuracy on test dataset",acc_decision_tree_test)'''
+
+decision_tree1 = tree.DecisionTreeClassifier(max_depth=3, criterion='gini')
+decision_tree1.fit(x_train, y_train)
+# Predicting results for test dataset
+y_pred = decision_tree1.predict(x_test)
+submission = pd.DataFrame({
+        "PassengerId": PassengerId,
+        "Survived": y_pred
+    })
+submission.to_csv('submission.csv', index=False)
+
+acc_decision_tree_train = round(decision_tree1.score(x_train, y_train) * 100, 2)
+print("Accuracy on train dataset",acc_decision_tree_train)
+
+acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , submission['Survived'].values)*100, 2)
 print("Accuracy on test dataset",acc_decision_tree_test)
 
 # Export our trained model as a .dot file
 with open("tree1.dot", 'w') as f:
      f = tree.export_graphviz(decision_tree1,
                               out_file=f,
+                              max_depth = 3,
                               impurity = True,
-                              rounded = True)
+                              feature_names = list(train_dummies.drop(['Survived'], axis=1)),
+                              class_names = ['Died', 'Survived'],
+                              rounded = True,
+                              filled= True )
+                                      
 
 
 
