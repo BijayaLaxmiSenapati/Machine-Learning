@@ -21,7 +21,6 @@ from PIL import Image, ImageDraw, ImageFont
 from IPython.display import Image as PImage
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import RandomizedSearchCV
 
 # Loading the data
 train = pd.read_csv('D:/Users/bsenapat/Documents/TitanicTrial1/dataset/train.csv')
@@ -72,7 +71,7 @@ for dataset in full_data:
     dataset['Age'] = dataset['Age'].astype(int)
 
 # Function to extract titles from passenger names
-def get_title(name):
+'''def get_title(name):
     title_search = re.search(' ([A-Za-z]+)\.', name)
     # If the title exists, extract and return it.
     if title_search:
@@ -88,12 +87,12 @@ for dataset in full_data:
     dataset['Title'] = dataset['Title'].replace(['Lady', 'Countess','Capt', 'Col','Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'], 'Rare')
     dataset['Title'] = dataset['Title'].replace('Mlle', 'Miss')
     dataset['Title'] = dataset['Title'].replace('Ms', 'Miss')
-    dataset['Title'] = dataset['Title'].replace('Mme', 'Mrs')
+    dataset['Title'] = dataset['Title'].replace('Mme', 'Mrs')'''
 
 # Converts all the categorical features into integers
 for dataset in full_data:
     # Mapping Sex
-    #dataset['Sex'] = dataset['Sex'].map( {'female': 0, 'male': 1} ).astype(int)
+    dataset['Sex'] = dataset['Sex'].map( {'female': 0, 'male': 1} ).astype(int)
     
     # Mapping titles
     '''title_mapping = {"Mr": 1, "Master": 2, "Mrs": 3, "Miss": 4, "Rare": 5}
@@ -101,7 +100,7 @@ for dataset in full_data:
     dataset['Title'] = dataset['Title'].fillna(0)'''
     
     # Mapping Embarked
-    #dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
+    dataset['Embarked'] = dataset['Embarked'].map( {'S': 0, 'C': 1, 'Q': 2} ).astype(int)
     
     # Mapping Fare
     dataset.loc[ dataset['Fare'] <= 7.91, 'Fare'] 						        = 0
@@ -140,14 +139,14 @@ print("Final columns in test dataset \n", test_dummies.columns)
 
 # Create Numpy arrays of train, test and target (Survived) dataframes to feed into our models'''
 x_train = train_dummies.drop(['Survived'], axis=1).values 
-y_train = train_dummies['Survived']
+y_train = train_dummies[['Survived']].values
 x_test = test_dummies.values
 
 # Create Decision Tree with max_depth = 3
 #decision_tree = tree.DecisionTreeClassifier(max_depth = 3)
 
 ############################### CROSS VALIDATION #################################
-'''cv = KFold(n_splits=10) # Desired number of Cross Validation folds
+'''cv = KFold(n_splits=3) # Desired number of Cross Validation folds
 accuracies = list()
 max_attributes = len(list(test))
 depth_range = range(1, max_attributes + 1)
@@ -163,10 +162,8 @@ for depth in depth_range:
         f_train = train.loc[train_fold] # Extract train data with cv indices
         f_valid = train.loc[valid_fold] # Extract valid data with cv indices
 
-        model = tree_model.fit(X = f_train.drop(['Survived'], axis=1), 
-                               y = f_train["Survived"]) # We fit the model with the fold train data
-        valid_acc = model.score(X = f_valid.drop(['Survived'], axis=1), 
-                                y = f_valid["Survived"])# We calculate accuracy with the fold validation data
+        model = tree_model.fit(X = f_train.drop(['Survived'], axis=1), y = f_train["Survived"]) # We fit the model with the fold train data
+        valid_acc = model.score(X = f_valid.drop(['Survived'], axis=1), y = f_valid["Survived"])# We calculate accuracy with the fold validation data
         fold_accuracy.append(valid_acc)
 
     avg = sum(fold_accuracy)/len(fold_accuracy)
@@ -177,9 +174,26 @@ df = pd.DataFrame({"Max Depth": depth_range, "Average Accuracy": accuracies})
 df = df[["Max Depth", "Average Accuracy"]]
 print(df.to_string(index=False))'''
 
-########################### RANDOMIZED SEARCH ###############################
-'''param_grid = {"max_depth": [1,2,3,4,5,6,7,8,9,10],
-              "min_samples_leaf": [6,7,8,9,10,11,12,13,14],
+print(type(x_train))
+print(type(y_train))
+############################ cross validation using sklearn library(working) ##########################
+from sklearn.model_selection import cross_val_score
+max_attributes = len(list(test))
+depth_range = range(1, max_attributes + 1)
+accuracies = []
+for depth in depth_range:
+     tree_model = tree.DecisionTreeClassifier(max_depth = depth)
+     scores = cross_val_score(tree_model, x_train, y_train, cv=10 , scoring='accuracy')
+     accuracies.append(scores.mean())
+print('fold_accuracy: ',accuracies)
+# Just to show results conveniently
+df = pd.DataFrame({"Max Depth": depth_range, "Average Accuracy": accuracies})
+df = df[["Max Depth", "Average Accuracy"]]
+print(df.to_string(index=False))
+
+########################### GRID SEARCH ###############################
+param_grid = {"max_depth": [3,4,5,6,7,8,9],
+              "min_samples_leaf": [1,2,3,4,5,6,7,8],
               "criterion":["gini", "entropy"]}
 decision_tree = tree.DecisionTreeClassifier()
 
@@ -199,11 +213,12 @@ submission = pd.DataFrame({
 submission.to_csv('submission.csv', index=False)
 
 acc_decision_tree_train = round(tree_cv.score(x_train, y_train) * 100, 2)
-print("Accuracy on train dataset",acc_decision_tree_train)
+print("Accuracy on train dataset(GS)",acc_decision_tree_train)
 
 acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , submission['Survived'].values)*100, 2)
-print("Accuracy on test dataset",acc_decision_tree_test)'''
+print("Accuracy on test dataset(GS)",acc_decision_tree_test)
 
+##########################################################################
 decision_tree1 = tree.DecisionTreeClassifier(max_depth=3, criterion='gini')
 decision_tree1.fit(x_train, y_train)
 # Predicting results for test dataset
@@ -221,6 +236,7 @@ acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , su
 print("Accuracy on test dataset",acc_decision_tree_test)
 
 # Export our trained model as a .dot file
+# dot tree1.dot -Tpng -o tree1.png command to convert to png
 with open("tree1.dot", 'w') as f:
      f = tree.export_graphviz(decision_tree1,
                               out_file=f,

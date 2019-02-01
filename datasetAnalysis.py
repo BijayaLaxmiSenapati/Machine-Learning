@@ -6,6 +6,7 @@ Created on Wed Jan 23 15:45:36 2019
 """
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Reading the train and the test data.
 train = pd.read_csv('D:/Users/bsenapat/Documents/TitanicTrial1/dataset/train.csv')
@@ -46,7 +47,7 @@ plotFeatures.append("Survived")
 sns.pairplot(train[plotFeatures], hue="Survived")'''
 
 #graph of Survived based on categorical values(bar graph)
-'''import plotly.graph_objs as go
+import plotly.graph_objs as go
 import plotly.plotly as py
 def plotGraph(plotData,msg):
     trace1 = go.Bar(
@@ -70,7 +71,7 @@ def plotGraph(plotData,msg):
         height=500
     )
     fig = dict(data=data, layout=layout)
-    py.iplot(fig)'''
+    py.iplot(fig)
     
 #graph of Survived based on Pclass
 '''pclass = pd.crosstab([train.Survived], train.Pclass)
@@ -187,12 +188,12 @@ plt.title('Pearson Correlation of Features', y=1.05, size=15)
 sns.heatmap(train.astype(float).corr(),linewidths=0.1,vmax=1.0, square=True, cmap=colormap, linecolor='white', annot=True)'''
 
 #BAR PLOT OF PCLASS AND SURVIVED FEATURE
-'''sns.barplot(x='Pclass', y='Survived', data=train)'''
+sns.barplot(x='Pclass', y='Survived', data=train)
 
 #GRAPH USING PCLASS, SURVIVED, SEX, EMBARKED
-'''FacetGrid = sns.FacetGrid(train, row='Embarked', size=4.5, aspect=1.6)
+FacetGrid = sns.FacetGrid(train, row='Embarked', size=4.5, aspect=1.6)
 FacetGrid.map(sns.pointplot, 'Pclass', 'Survived', 'Sex', palette=None,  order=None, hue_order=None )
-FacetGrid.add_legend()'''
+FacetGrid.add_legend()
 
 '''prediction=decision_tree.predict([[3, 1, 1, 2, 3, 1, 1, 4, 0, 1]])
 #Pclass(1,2,3) Sex(1,0) Age(0,1,2,3) Parch(1,2,3,4,5,6) Fare(0,1,2,3) Embarked(0,1,2) Has_Cabin(0,1) FamilySize(1,2,3,4,5,6,7,8) IsAlone(0,1) Title(1,2,3,4,5)
@@ -204,3 +205,31 @@ print(prediction1,"prediction1")'''
 '''print("type(test_label.loc[Survived])",type(test_label.loc[:, "Survived"]))
 acc_decision_tree_test2 = round(accuracy_score(test_label.loc[:, 'Survived'] , submission.loc[:, 'Survived'])*100, 2)
 print("Accuracy on test dataset",acc_decision_tree_test2)'''
+
+########################################### Model #####################################
+'''from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+
+final_selected_model = DecisionTreeClassifier(max_depth=3, min_sample_leaf=1,random_state=0)
+final_selected_model.fit(X_train, y_train)
+# Predicting results for test dataset
+y_pred = final_selected_model.predict(X_test)
+submission = pd.DataFrame({
+        "PassengerId": PassengerId,
+        "Survived": y_pred
+    })
+submission.to_csv('submission.csv', index=False)
+print("y_pred",y_pred)
+acc_decision_tree_train = round(final_selected_model.score(X_test, y_test) * 100, 2)
+print("Accuracy on train dataset(GS)",acc_decision_tree_train)
+# Export our trained model as a .dot file
+#"dot tree1.dot -Tpng -o tree1.png" command to convert to png
+with open("tree1.dot", 'w') as f:
+     f = tree.export_graphviz(final_selected_model,
+                              out_file=f,
+                              max_depth = 3,
+                              impurity = True,
+                              feature_names = list(full_dataset_dummies.drop(['Survived'], axis=1)),
+                              class_names = ['Died', 'Survived'],
+                              rounded = True,
+                              filled= True )'''
