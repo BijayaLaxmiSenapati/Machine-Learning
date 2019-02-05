@@ -219,10 +219,11 @@ acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , su
 print("Accuracy on test dataset(GS)",acc_decision_tree_test)
 
 ##########################################################################
-decision_tree1 = tree.DecisionTreeClassifier(max_depth=3, criterion='gini')
+decision_tree1 = tree.DecisionTreeClassifier(max_depth=3, criterion='gini', min_samples_leaf=1)
 decision_tree1.fit(x_train, y_train)
 # Predicting results for test dataset
 y_pred = decision_tree1.predict(x_test)
+train_pred = decision_tree1.predict(x_train)
 submission = pd.DataFrame({
         "PassengerId": PassengerId,
         "Survived": y_pred
@@ -235,6 +236,9 @@ print("Accuracy on train dataset",acc_decision_tree_train)
 acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , submission['Survived'].values)*100, 2)
 print("Accuracy on test dataset",acc_decision_tree_test)
 
+from sklearn.metrics import confusion_matrix
+print("Confusion matrix of test",confusion_matrix(test_label["Survived"], y_pred))
+print("Confusion matrix of train",confusion_matrix(y_train, train_pred))
 # Export our trained model as a .dot file
 # dot tree1.dot -Tpng -o tree1.png command to convert to png
 with open("tree1.dot", 'w') as f:

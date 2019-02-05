@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Tue Feb  5 11:07:38 2019
+
+@author: bsenapat
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Wed Jan 30 15:05:29 2019
 
 @author: bsenapat
@@ -12,6 +19,7 @@ import seaborn as sns
 from sklearn import tree
 from sklearn.model_selection import KFold
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
 
 
 # Reading the train and the test data.
@@ -20,46 +28,12 @@ test_feature = pd.read_csv('D:/Users/bsenapat/Documents/TitanicTrial1/dataset/te
 test_label_with_passengerId = pd.read_csv(r'D:/Users/bsenapat/Documents/TitanicTrial1/dataset/gender_submission.csv')
 
 test = pd.merge(test_feature, test_label_with_passengerId, on='PassengerId')
+print("\n")
 print("test.columns ",test.columns)
 
 full_dataset = pd.concat([train, test], ignore_index=True, sort=True)#(it concatenates well but along with the values of index column)
+print("\n")
 print("full_dataset.columns ",full_dataset.columns)
-
-a = train.groupby('Survived').count()
-print("UnSurvived and Survived in train dataset \n",a)
-
-a = test_label_with_passengerId.groupby('Survived').count()
-print("\n UnSurvived and Survived in test dataset \n",a)
-
-a = full_dataset.groupby('Survived').count()
-print("\n UnSurvived and Survived in total dataset \n",a)
-
-a=train.groupby(['Sex','Survived']).size()
-print("Survival rate related to Sex in train dataset \n",a)
-
-a=test.groupby(['Sex','Survived']).size()
-print("Survival rate related to Sex in test dataset \n",a)
-
-a=full_dataset.groupby(['Sex','Survived']).size()
-print("Survival rate related to Sex in full dataset \n",a)
-
-a=train.groupby('Sex').size()
-print("count of male and female in train dataset \n",a)
-
-a=test_feature.groupby('Sex').size()
-print("count of male and female in test dataset \n",a)
-
-a=full_dataset.groupby('Sex').size()
-print("count of male and female in full dataset \n",a)
-
-print("MAAAAAAAAAAAAAAAAAAAAAAAXXXXXXXXXXXXXXXXXXXXXXXXXXX \n",train["Fare"].max())
-print("MIIIIIIIIIIIIIIIIIIIIIIINNNNNNNNNNNNNNNNNNNNNNNNNNN \n",train["Fare"].min())
-w=(train["Fare"].max()-train["Fare"].min())/4 ######## NOT DONE THROUGH THIS i.e EQUAL WIDTH BINNING
-print("w :",w)
-print("min+w :",train["Fare"].min()+w)
-print("min+2w :",train["Fare"].min()+2*w)
-print("min+3w :",train["Fare"].min()+3*w)
-print("min+4w :",train["Fare"].min()+4*w)
 
 # Store our test passenger IDs for easy access
 PassengerId = full_dataset['PassengerId']
@@ -145,13 +119,7 @@ drop_elements = ['PassengerId', 'Name', 'Ticket', 'Cabin', 'SibSp', 'Parch']
 full_dataset = full_dataset.drop(drop_elements, axis = 1)
 #print(full_dataset.columns)
 
-######################HEAT MAP##########################################################################
-colormap = plt.cm.viridis
-plt.figure(figsize=(12,12))
-plt.title('Pearson Correlation of Features', y=1.05, size=15)
-sns.heatmap(full_dataset.astype(float).corr(),linewidths=0.1,vmax=1.0, square=True, cmap=colormap, linecolor='white', annot=True)
-
-#from the heat map we got to know that column Sex and Title have a big corelation value. One of the two can be removed from the dataset because both of them almost have same information.
+#from the heat map we got to know that column Sex and Title have a big corelation value. One of the two can be removed from the dataset because both of them almost have same information.'''
 # corelation of Sex with Survived=0.69
 # corelation of Title with Survived=0.62
 # As Sex has greater corelation with Survived we are keeping Sex column and removing title column.
@@ -169,45 +137,12 @@ full_dataset['Has_Cabin'] = full_dataset['Has_Cabin'].apply(str)
 ########################## One Hot Encoding of Categorical features ################################
 full_dataset_dummies=pd.get_dummies(full_dataset)
 #print("full_dataset \n",full_dataset)
+print("\n")
 print("Columns after One Hot Encoding ",full_dataset_dummies.columns)
-
-############################### CROSS VALIDATION #######################################################
-cv = KFold(n_splits=3) # Desired number of Cross Validation folds
-accuracies = list()
-max_attributes = len(list(full_dataset))
-print("max_attributes",max_attributes)
-depth_range = range(1, max_attributes + 1)
-
-print("cv -",cv)
-
-# Testing max_depths from 1 to max attributes
-# Uncomment prints for details about each Cross Validation pass
-for depth in depth_range:
-    fold_accuracy = []
-    tree_model = tree.DecisionTreeClassifier(max_depth = depth)
-    for train_fold, valid_fold in cv.split(full_dataset_dummies):
-        f_train = full_dataset_dummies.loc[train_fold] # Extract train data with cv indices
-        f_valid = full_dataset_dummies.loc[valid_fold] # Extract valid data with cv indices
-
-        model = tree_model.fit(X = f_train.drop(['Survived'], axis=1), y = f_train["Survived"]) # We fit the model with the fold train data
-        valid_acc = model.score(X = f_valid.drop(['Survived'], axis=1), y = f_valid["Survived"])# We calculate accuracy with the fold validation data
-        fold_accuracy.append(valid_acc)
-
-    avg = sum(fold_accuracy)/len(fold_accuracy)
-    accuracies.append(avg)
-
-# Just to show results conveniently
-df = pd.DataFrame({"Max Depth": depth_range, "Average Accuracy": accuracies})
-df = df[["Max Depth", "Average Accuracy"]]
-print(df.to_string(index=False),"\n")
-
-print("type(full_dataset) ",type(full_dataset))
-
 
 ############################ cross validation using sklearn library(working)S##########################
 from sklearn.model_selection import cross_val_score
 max_attributes = len(list(full_dataset))
-print("max_attributes",max_attributes)
 depth_range = range(1, max_attributes + 1)
 accuracies = []
 for depth in depth_range:
@@ -217,59 +152,86 @@ for depth in depth_range:
 # Just to show results conveniently
 df = pd.DataFrame({"Max Depth": depth_range, "Average Accuracy": accuracies})
 df = df[["Max Depth", "Average Accuracy"]]
+print("\n")
 print(df.to_string(index=False))
 
 ########################### GRID SEARCH (working)###############################
+
 X = full_dataset_dummies.drop(['Survived'], axis=1).values 
 y = full_dataset_dummies['Survived'].values
+
+############ TRAIN_TEST SPLIT OF DATA ##############
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+print("\n")
+print("type(y_train): \n",type(y_train))
+print("y_train.shape: \n",y_train.shape)
+print("y_train[:, None].shape: \n",y_train[:, None].shape)
+
+y_train_2D=y_train[:, None]
+pdTrain = np.concatenate((X_train,y_train_2D),axis=1)
+pdTrain = pd.DataFrame.from_records(pdTrain, columns=['Age', 'Embarked', 'Fare', 'Pclass', 'FamilySize', 'Sex_0',
+       'Sex_1', 'Has_Cabin_0', 'Has_Cabin_1', 'IsAlone_0', 'IsAlone_1','Survived'])
+print("\n")
+print("pdTrain: \n",pdTrain.shape)
+
+a = pdTrain.groupby('Survived').count()
+print("\n")
+print("Dead and Survived in pdTrain \n",a)
+
+b = pdTrain.groupby(['Sex_0','Survived']).size()
+print("\n")
+print("Survival rate related to Sex in pdTrain dataset \n",b)
+
+y_test_2D=y_test[:, None]
+pdTest = np.concatenate((X_test,y_test_2D),axis=1)
+pdTest = pd.DataFrame.from_records(pdTest, columns=['Age', 'Embarked', 'Fare', 'Pclass', 'FamilySize', 'Sex_0',
+       'Sex_1', 'Has_Cabin_0', 'Has_Cabin_1', 'IsAlone_0', 'IsAlone_1','Survived'])
+print("\n")
+print("pdTest: \n",pdTest.shape)
+
+c = pdTest.groupby('Survived').count()
+print("\n")
+print("Dead and Survived in pdTest \n",c)
+
+d = pdTest.groupby(['Sex_0','Survived']).size()
+print("\n")
+print("Survival rate related to Sex in pdTest dataset \n",d)
+
+
 param_grid = {"max_depth": [3,4,5,6,7,8,9],
               "min_samples_leaf": [1,2,3,4,5,6,7,8,9,10],
               "criterion":["gini", "entropy"]}
 decision_tree = tree.DecisionTreeClassifier()
 
 grid = GridSearchCV(estimator = decision_tree,param_grid = param_grid, cv=3, n_jobs=-1)
-grid.fit(X, y)
+grid.fit(X_train, y_train)
 
+print("\n")
 print("tuned decision tree parameters: ",format(grid.best_params_))
+print("\n")
 print("Best Score is: ",format(grid.best_score_))
-print("Best Model got from GridSearchCV: ",grid.best_estimator_)
 
 # Predicting results for test dataset
-'''y_pred = grid.predict(X)
-submission = pd.DataFrame({
-        "PassengerId": PassengerId,
-        "Survived": y_pred
-    })
-submission.to_csv('submission.csv', index=False)
-print("y_pred",y_pred)
+y_train_pred = grid.predict(X_train)
 
-acc_decision_tree_train = round(grid.score(X, y) * 100, 2)
-print("Accuracy on train dataset(GS)",acc_decision_tree_train)'''
+acc_decision_tree_train = round(grid.score(X_train, y_train) * 100, 2)
+print("\n")
+print("Accuracy on pdTrain dataset(GS)",acc_decision_tree_train)
 
-########################################### Model #####################################
-final_selected_model = grid.best_estimator_
-final_selected_model.fit(X, y)
-# Predicting results for test dataset
-y_pred = grid.predict(X)
-submission = pd.DataFrame({
-        "PassengerId": PassengerId,
-        "Survived": y_pred
-    })
-submission.to_csv('submission.csv', index=False)
-print("y_pred",y_pred,"\n")
-print("Columns after all Pre-Processing work :\n",full_dataset_dummies.drop(['Survived'], axis=1).columns)
+y_test_pred = grid.predict(X_test)
 
-acc_decision_tree_train = round(grid.score(X, y) * 100, 2)
-print("Accuracy on total dataset(GS)",acc_decision_tree_train)
+acc_decision_tree_test = round(grid.score(X_test, y_test) * 100, 2)
+print("\n")
+print("Accuracy on pdTest dataset(GS)",acc_decision_tree_test)
 
-# Export our trained model as a .dot file
-# dot tree1.dot -Tpng -o tree1.png command to convert to png
-with open("tree1.dot", 'w') as f:
-     f = tree.export_graphviz(final_selected_model,
-                              out_file=f,
-                              max_depth = 3,
-                              impurity = True,
-                              feature_names = list(full_dataset_dummies.drop(['Survived'], axis=1)),
-                              class_names = ['Died', 'Survived'],
-                              rounded = True,
-                              filled= True )
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+print("\n")
+print("Confusion matrix of train \n",confusion_matrix(y_train, y_train_pred))
+print("Precision score of train: ",precision_score(y_train,y_train_pred))
+print("Recall score of train: ", recall_score(y_train,y_train_pred))
+print("\n")
+print("Confusion matrix of test \n",confusion_matrix(y_test, y_test_pred))
+print("Precision score of test: ",precision_score(y_test, y_test_pred))
+print("Recall score of test: ", recall_score(y_test, y_test_pred))
