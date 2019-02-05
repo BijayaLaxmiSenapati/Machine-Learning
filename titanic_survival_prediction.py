@@ -237,8 +237,16 @@ acc_decision_tree_test = round(accuracy_score(test_label['Survived'].values , su
 print("Accuracy on test dataset",acc_decision_tree_test)
 
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 print("Confusion matrix of test",confusion_matrix(test_label["Survived"], y_pred))
+print("Precision score of test: ",precision_score(test_label["Survived"], y_pred))
+print("Recall score of test: ", recall_score(test_label["Survived"], y_pred))
+
 print("Confusion matrix of train",confusion_matrix(y_train, train_pred))
+print("Precision score of train: ",precision_score(y_train, train_pred))
+print("Recall score of train: ", recall_score(y_train, train_pred))
+
 # Export our trained model as a .dot file
 # dot tree1.dot -Tpng -o tree1.png command to convert to png
 with open("tree1.dot", 'w') as f:

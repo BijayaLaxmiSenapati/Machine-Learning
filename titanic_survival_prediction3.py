@@ -261,6 +261,12 @@ print("Columns after all Pre-Processing work :\n",full_dataset_dummies.drop(['Su
 
 acc_decision_tree_train = round(grid.score(X, y) * 100, 2)
 print("Accuracy on total dataset(GS)",acc_decision_tree_train)
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+print("Confusion matrix of total dataset",confusion_matrix(y, y_pred))
+print("Precision score of total dataset: ",precision_score(y, y_pred))
+print("Recall score of total dataset: ", recall_score(y, y_pred))
 
 # Export our trained model as a .dot file
 # dot tree1.dot -Tpng -o tree1.png command to convert to png
